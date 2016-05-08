@@ -2,54 +2,112 @@
 <head>
   <title>Probability Machine</title>
   <style>
-    body, input { font-family: "Carbon Block"; font-size: 30px; color: #bae }
+    #content {
+      width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 65px;
+    }
+    #inputfields {
+      text-align: center;
+    }
+    body, input { 
+      font-family: "Carbon Block"; 
+      font-size: 30px;
+      color: #bae;
+    }
+    label {
+      text-align: right;
+      display: inline-block;
+      width: 115px;
+    }
   </style>
 </head>
 <body>
-  <form>
-    <div>
-      <label>Minimum</label>
-      <input name="minimum" size=3></input>
-    </div>
-    <div>
-      <label>Maximum</label>
-      <input name="maximum" size=3></input>
-    </div>
-    <div>
-      <label>Trials</label>
-      <input name="trials" size=3></input>
-    </div>
-    <div>
-      <input type="submit" value="Generate"></input>
-    </div>
-	<textarea readonly=true id="results" rows=16 cols=60></textarea>
-  </form>
+  <div id="content">
+    <form>
+      <div id="inputfields">
+        <div>
+          <label>Minimum:</label>
+          <input name="minimum" size=3></input>
+        </div>
+        <div>
+          <label>Maximum:</label>
+          <input name="maximum" size=3></input>
+        </div>
+        <div>
+          <label>Trials:</label>
+          <input name="trials" size=3></input>
+        </div>
+        <div>
+          <input type="submit" value="Generate"></input>
+        </div>
+      </div>
+      <textarea readonly=true id="results" rows=16 style="width: 100%;"></textarea>
+    </form>
+    <div id="graph"></div>
+  </div>
   <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
   <script src="URI.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script>
+    function generateRandomNumbers(min, max, trials) {
+      var result = [];
+      for (var trial = 0; trial < trials; trial++) {
+        var number = Math.floor(Math.random() * (max - (min - 1)) + min);
+        result.push(number)
+      }
+      return result;
+    }
+    
+    function drawChart() {
+      if (numbers == undefined) {
+        return;
+      }
+      var data = google.visualization.arrayToDataTable(numberFrequencies(numbers));
+
+      var chart = new google.visualization.PieChart($('#graph')[0]);
+
+      chart.draw(data);
+    }
+    
+    function numberFrequencies(numbers) {
+      var frequencies = [['Number', 'Frequency']];
+      
+      for (var number of numbers) {
+        var found = false;
+        for (var frequency of frequencies) {
+          if (number.toString() == frequency[0]) {
+            frequency[1]++;
+            found = true;
+          }
+        }
+        if (found == false) {
+          frequencies.push([number.toString(), 1]);
+        }
+      }
+      
+      return frequencies;
+    }
+    
     // Copy the queryparams into the input fields.
-	var url = new URI(window.location);
-	var query = url.query(true);
-	$("input[name=minimum]").val(query.minimum);
-	$("input[name=maximum]").val(query.maximum);
-	$("input[name=trials]").val(query.trials);
-	
-	function generateRandomNumbers(min, max, trials) {
-	  var result = [];
-	  for (var trial = 0; trial < trials; trial++) {
-	    var number = Math.floor(Math.random() * (max - (min - 1)) + min);
-		result.push(number)
-	  }
-	  return result;
-	}
-	
-	if (parseInt(query.trials) > 0) {
-	  var numbers = generateRandomNumbers(parseInt(query.minimum), 
-	                                      parseInt(query.maximum), 
-										  parseInt(query.trials));
-	  var numberString = numbers.join(" ");
-	  $("#results").val(numberString);
-	}
+    var url = new URI(window.location);
+    var query = url.query(true);
+    $("input[name=minimum]").val(query.minimum);
+    $("input[name=maximum]").val(query.maximum);
+    $("input[name=trials]").val(query.trials);
+    var numbers;
+    
+    if (parseInt(query.trials) > 0) {
+      numbers = generateRandomNumbers(parseInt(query.minimum), 
+                                      parseInt(query.maximum), 
+                                      parseInt(query.trials));
+      var numberString = numbers.join(" ");
+      $("#results").val(numberString);
+    }
+    
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
   </script>
 </body>
 </html>
